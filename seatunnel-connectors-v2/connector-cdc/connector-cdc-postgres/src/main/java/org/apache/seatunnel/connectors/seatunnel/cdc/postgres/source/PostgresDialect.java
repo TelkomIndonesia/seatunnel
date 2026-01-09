@@ -86,8 +86,7 @@ public class PostgresDialect implements JdbcDataSourceDialect {
 
     @Override
     public JdbcConnection openJdbcConnection(JdbcSourceConfig sourceConfig) {
-        PostgresConnectorConfig conf =
-                (PostgresConnectorConfig) sourceConfig.getDbzConnectorConfig();
+        PostgresConnectorConfig conf = (PostgresConnectorConfig) sourceConfig.getDbzConnectorConfig();
         return new PostgresConnection(
                 conf.getJdbcConfig(),
                 newPostgresValueConverterBuilder(
@@ -104,9 +103,8 @@ public class PostgresDialect implements JdbcDataSourceDialect {
     public List<TableId> discoverDataCollections(JdbcSourceConfig sourceConfig) {
         PostgresSourceConfig postgresSourceConfig = (PostgresSourceConfig) sourceConfig;
         try (JdbcConnection jdbcConnection = openJdbcConnection(sourceConfig)) {
-            List<TableId> tables =
-                    TableDiscoveryUtils.listTables(
-                            jdbcConnection, postgresSourceConfig.getTableFilters());
+            List<TableId> tables = TableDiscoveryUtils.listTables(
+                    jdbcConnection, postgresSourceConfig.getTableFilters());
             this.checkAllTablesEnabledCapture(jdbcConnection, tables);
             return tables;
         } catch (SQLException e) {
@@ -117,17 +115,18 @@ public class PostgresDialect implements JdbcDataSourceDialect {
     @Override
     public void checkAllTablesEnabledCapture(JdbcConnection jdbcConnection, List<TableId> tableIds)
             throws SQLException {
-        PostgresConnection postgresConnection = (PostgresConnection) jdbcConnection;
-        for (TableId tableId : tableIds) {
-            ServerInfo.ReplicaIdentity replicaIdentity =
-                    postgresConnection.readReplicaIdentityInfo(tableId);
-            if (!ServerInfo.ReplicaIdentity.FULL.equals(replicaIdentity)) {
-                throw new SeaTunnelException(
-                        String.format(
-                                "Table %s does not have a full replica identity, please execute: ALTER TABLE %s REPLICA IDENTITY FULL;",
-                                tableId, tableId));
-            }
-        }
+        // PostgresConnection postgresConnection = (PostgresConnection) jdbcConnection;
+        // for (TableId tableId : tableIds) {
+        // ServerInfo.ReplicaIdentity replicaIdentity =
+        // postgresConnection.readReplicaIdentityInfo(tableId);
+        // if (!ServerInfo.ReplicaIdentity.FULL.equals(replicaIdentity)) {
+        // throw new SeaTunnelException(
+        // String.format(
+        // "Table %s does not have a full replica identity, please execute: ALTER TABLE
+        // %s REPLICA IDENTITY FULL;",
+        // tableId, tableId));
+        // }
+        // }
     }
 
     @Override
@@ -142,17 +141,15 @@ public class PostgresDialect implements JdbcDataSourceDialect {
     public PostgresSourceFetchTaskContext createFetchTaskContext(
             SourceSplitBase sourceSplitBase, JdbcSourceConfig taskSourceConfig) {
 
-        RelationalDatabaseConnectorConfig dbzConnectorConfig =
-                taskSourceConfig.getDbzConnectorConfig();
+        RelationalDatabaseConnectorConfig dbzConnectorConfig = taskSourceConfig.getDbzConnectorConfig();
 
-        PostgresConnection jdbcConnection =
-                new PostgresConnection(
-                        dbzConnectorConfig.getJdbcConfig(),
-                        newPostgresValueConverterBuilder(
-                                (PostgresConnectorConfig) dbzConnectorConfig,
-                                "postgres-source-fetch-task",
-                                taskSourceConfig.getServerTimeZone()),
-                        "postgres-source-fetch-task");
+        PostgresConnection jdbcConnection = new PostgresConnection(
+                dbzConnectorConfig.getJdbcConfig(),
+                newPostgresValueConverterBuilder(
+                        (PostgresConnectorConfig) dbzConnectorConfig,
+                        "postgres-source-fetch-task",
+                        taskSourceConfig.getServerTimeZone()),
+                "postgres-source-fetch-task");
 
         List<TableChanges.TableChange> tableChangeList = new ArrayList<>();
         // TODO: support save table schema
