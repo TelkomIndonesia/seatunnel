@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.natsjetstream.config;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.seatunnel.api.configuration.Option;
@@ -59,10 +61,15 @@ public class NatsJetStreamBaseOptions extends ConnectorCommonOptions {
 
     public static final Option<Map<String, String>> NATIVE_FIELDS = Options.key("native_format_fields")
             .mapType()
-            .defaultValue(Map.of(
-                    "id", "id",
-                    "subject", "subject",
-                    "headers", "headers",
-                    "data", "data"))
+            .defaultValue(getDefaultNativeFields())
             .withDescription("Nats native format fields mapping");
+
+    public static Map<String, String> getDefaultNativeFields() {
+        Map<String, String> map = new HashMap<>();
+        map.put("id", "id");
+        map.put("subject", "subject");
+        map.put("headers", "headers");
+        map.put("data", "data");
+        return map;
+    }
 }
