@@ -139,6 +139,5 @@ public class NatsJetStreamSinkWriter
         } catch (JetStreamApiException e) {
             throw new IOException("publish nats error", e);
         }
-
     }
 }
