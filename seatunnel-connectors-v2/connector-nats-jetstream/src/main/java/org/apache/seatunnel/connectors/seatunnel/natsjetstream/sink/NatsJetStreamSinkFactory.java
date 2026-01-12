@@ -22,6 +22,7 @@ import org.apache.seatunnel.api.table.connector.TableSink;
 import org.apache.seatunnel.api.table.factory.Factory;
 import org.apache.seatunnel.api.table.factory.TableSinkFactory;
 import org.apache.seatunnel.api.table.factory.TableSinkFactoryContext;
+import org.apache.seatunnel.connectors.seatunnel.natsjetstream.config.NatsJetStreamBaseOptions;
 
 import com.google.auto.service.AutoService;
 
@@ -30,18 +31,22 @@ public class NatsJetStreamSinkFactory implements TableSinkFactory {
 
     @Override
     public String factoryIdentifier() {
-        return "NATSJetStream";
+        return NatsJetStreamBaseOptions.CONNECTOR_IDENTITY;
     }
 
     @Override
     public OptionRule optionRule() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'optionRule'");
+        return OptionRule.builder()
+                .required(NatsJetStreamBaseOptions.URL)
+                .optional(NatsJetStreamBaseOptions.USERNAME)
+                .optional(NatsJetStreamBaseOptions.PASSWORD)
+                .optional(NatsJetStreamBaseOptions.TOKEN)
+                .build();
+
     }
 
     @Override
     public TableSink createSink(TableSinkFactoryContext context) {
-        // TODO Auto-generated method stub
-        return TableSinkFactory.super.createSink(context);
+        return () -> new NatsJetStreamSink(context.getOptions(), context.getCatalogTable());
     }
 }

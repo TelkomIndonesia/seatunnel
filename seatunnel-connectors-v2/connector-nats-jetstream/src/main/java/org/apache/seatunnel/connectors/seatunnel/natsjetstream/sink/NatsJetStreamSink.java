@@ -17,38 +17,45 @@
 
 package org.apache.seatunnel.connectors.seatunnel.natsjetstream.sink;
 
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.sink.SeaTunnelSink;
 import org.apache.seatunnel.api.sink.SinkWriter;
 import org.apache.seatunnel.api.sink.SinkWriter.Context;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
+import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
+import org.apache.seatunnel.connectors.seatunnel.natsjetstream.config.NatsJetStreamBaseOptions;
 
 import java.io.IOException;
 import java.util.Optional;
 
 public class NatsJetStreamSink
-        implements SeaTunnelSink<
-                SeaTunnelRow,
-                NatsJetStreamSinkState,
-                NatsJetStreamSinkCommitInfo,
-                NatsJetStreamSinkAggregatedCommitInfo> {
+        implements
+        SeaTunnelSink<SeaTunnelRow, NatsJetStreamSinkState, NatsJetStreamSinkCommitInfo, NatsJetStreamSinkAggregatedCommitInfo> {
 
-    @Override
-    public String getPluginName() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getPluginName'");
+    private final ReadonlyConfig pluginConfig;
+    private final SeaTunnelRowType seaTunnelRowType;
+    private final CatalogTable catalogTable;
+
+    public NatsJetStreamSink(ReadonlyConfig pluginConfig, CatalogTable catalogTable) {
+        this.pluginConfig = pluginConfig;
+        this.catalogTable = catalogTable;
+        this.seaTunnelRowType = catalogTable.getTableSchema().toPhysicalRowDataType();
     }
 
     @Override
-    public SinkWriter<SeaTunnelRow, NatsJetStreamSinkCommitInfo, NatsJetStreamSinkState>
-            createWriter(Context arg0) throws IOException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'createWriter'");
+    public String getPluginName() {
+        return NatsJetStreamBaseOptions.CONNECTOR_IDENTITY;
+    }
+
+    @Override
+    public SinkWriter<SeaTunnelRow, NatsJetStreamSinkCommitInfo, NatsJetStreamSinkState> createWriter(Context arg0)
+            throws IOException {
+        return new NatsJetStreamSinkWriter(arg0, seaTunnelRowType, pluginConfig);
     }
 
     @Override
     public Optional<CatalogTable> getWriteCatalogTable() {
-        // TODO Auto-generated method stub
-        return SeaTunnelSink.super.getWriteCatalogTable();
+        return Optional.ofNullable(catalogTable);
     }
 }

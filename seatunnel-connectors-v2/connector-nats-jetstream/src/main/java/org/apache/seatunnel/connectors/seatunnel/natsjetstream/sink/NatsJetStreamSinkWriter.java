@@ -17,8 +17,22 @@
 
 package org.apache.seatunnel.connectors.seatunnel.natsjetstream.sink;
 
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
+import org.apache.seatunnel.api.serialization.SerializationSchema;
 import org.apache.seatunnel.api.sink.SinkWriter;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
+import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
+import org.apache.seatunnel.connectors.seatunnel.natsjetstream.config.NatsJetStreamBaseOptions;
+import org.apache.seatunnel.connectors.seatunnel.natsjetstream.config.NatsJetStreamMessageFormat;
+import org.apache.seatunnel.format.json.JsonSerializationSchema;
+
+import io.nats.client.Connection;
+import io.nats.client.JetStream;
+import io.nats.client.JetStreamApiException;
+import io.nats.client.Nats;
+import io.nats.client.Options;
+import io.nats.client.PublishOptions;
+import io.nats.client.Options.Builder;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -26,27 +40,73 @@ import java.util.Optional;
 public class NatsJetStreamSinkWriter
         implements SinkWriter<SeaTunnelRow, NatsJetStreamSinkCommitInfo, NatsJetStreamSinkState> {
 
+    private final SinkWriter.Context context;
+    private SeaTunnelRowType seaTunnelRowType;
+
+    private final Connection connection;
+    private final JetStream jetStream;
+
+    private final String defaultSubject;
+    protected final SerializationSchema serializationSchema;
+
+    public NatsJetStreamSinkWriter(Context context, SeaTunnelRowType seaTunnelRowType, ReadonlyConfig pluginConfig)
+            throws IOException {
+        this.context = context;
+        this.seaTunnelRowType = seaTunnelRowType;
+
+        String url = pluginConfig.get(NatsJetStreamBaseOptions.URL);
+        Builder builder = Options.builder().server(url);
+        String username = pluginConfig.get(NatsJetStreamBaseOptions.USERNAME);
+        String password = pluginConfig.get(NatsJetStreamBaseOptions.PASSWORD);
+        if (username != null && password != null) {
+            builder.userInfo(username, password);
+        }
+        String token = pluginConfig.get(NatsJetStreamBaseOptions.TOKEN);
+        if (token != null) {
+            builder.token(token.toCharArray());
+        }
+        try {
+            this.connection = Nats.connect(builder.build());
+            this.jetStream = connection.jetStream();
+        } catch (InterruptedException e) {
+            throw new IOException("connect nats error", e);
+        }
+
+        defaultSubject = pluginConfig.get(NatsJetStreamBaseOptions.SUBJECT);
+        NatsJetStreamMessageFormat format = pluginConfig.get(NatsJetStreamBaseOptions.FORMAT);
+        switch (format) {
+            default:
+                serializationSchema = new JsonSerializationSchema(seaTunnelRowType);
+                break;
+        }
+    }
+
     @Override
     public void abortPrepare() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'abortPrepare'");
     }
 
     @Override
     public void close() throws IOException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'close'");
+        try {
+            connection.close();
+        } catch (InterruptedException e) {
+            throw new IOException("close nats error", e);
+        }
     }
 
     @Override
     public Optional<NatsJetStreamSinkCommitInfo> prepareCommit() throws IOException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'prepareCommit'");
+        return Optional.empty();
     }
 
     @Override
     public void write(SeaTunnelRow arg0) throws IOException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'write'");
+        PublishOptions opts = PublishOptions.builder().build();
+        try {
+            jetStream.publish(defaultSubject, null, serializationSchema.serialize(arg0), opts);
+        } catch (JetStreamApiException e) {
+            throw new IOException("publish nats error", e);
+        }
+
     }
 }

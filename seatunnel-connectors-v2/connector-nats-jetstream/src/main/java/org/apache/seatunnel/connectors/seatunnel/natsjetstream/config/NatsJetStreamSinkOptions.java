@@ -17,4 +17,5 @@
 
 package org.apache.seatunnel.connectors.seatunnel.natsjetstream.config;
 
-public class NatsJetStreamSinkOptions extends NatsJetStreamBaseOptions {}
+public class NatsJetStreamSinkOptions extends NatsJetStreamBaseOptions {
+}

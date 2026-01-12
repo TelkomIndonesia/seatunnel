@@ -18,5 +18,8 @@
 package org.apache.seatunnel.connectors.seatunnel.natsjetstream.sink;
 
 import java.io.Serializable;
+import java.util.List;
 
-public class NatsJetStreamSinkAggregatedCommitInfo implements Serializable {}
+public class NatsJetStreamSinkAggregatedCommitInfo implements Serializable {
+    List<NatsJetStreamSinkCommitInfo> commitInfos;
+}

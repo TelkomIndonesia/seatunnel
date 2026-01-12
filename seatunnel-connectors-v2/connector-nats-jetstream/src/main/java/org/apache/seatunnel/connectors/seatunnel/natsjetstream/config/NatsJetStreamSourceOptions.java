@@ -17,4 +17,12 @@
 
 package org.apache.seatunnel.connectors.seatunnel.natsjetstream.config;
 
-public class NatsJetStreamSourceOptions extends NatsJetStreamBaseOptions {}
+import org.apache.seatunnel.api.configuration.Option;
+import org.apache.seatunnel.api.configuration.Options;
+
+public class NatsJetStreamSourceOptions extends NatsJetStreamBaseOptions {
+    public static final Option<String> STREAM_NAME = Options.key("stream_name")
+            .stringType()
+            .noDefaultValue()
+            .withDescription("NATS JetStream to connect to");
+}

@@ -22,39 +22,36 @@ import org.apache.seatunnel.api.configuration.Options;
 import org.apache.seatunnel.api.options.ConnectorCommonOptions;
 
 public class NatsJetStreamBaseOptions extends ConnectorCommonOptions {
-    public static final Option<String> URL =
-            Options.key("url")
-                    .stringType()
-                    .noDefaultValue()
-                    .withDescription(
-                            "URL to connect to NATS server. "
-                                    + "The format is (nats://)server_url: port. "
-                                    + "You can also provide a connection token like so: nats://token@server_url: port");
+    public static final String CONNECTOR_IDENTITY = "NATSJetStream";
+    public static final Option<String> URL = Options.key("url")
+            .stringType()
+            .noDefaultValue()
+            .withDescription(
+                    "URL to connect to NATS server. "
+                            + "The format is (nats://)server_url: port. "
+                            + "You can also provide a connection token like so: nats://token@server_url: port");
 
-    public static final Option<String> SUBJECT =
-            Options.key("subject")
-                    .stringType()
-                    .noDefaultValue()
-                    .withDescription("NATS JetStream subject to connect to");
+    public static final Option<String> USERNAME = Options.key("username")
+            .stringType()
+            .noDefaultValue()
+            .withDescription("Plaintext authentication username");
+    public static final Option<String> PASSWORD = Options.key("password")
+            .stringType()
+            .noDefaultValue()
+            .withDescription("Plaintext authentication password");
+    public static final Option<String> TOKEN = Options.key("token")
+            .stringType()
+            .noDefaultValue()
+            .withDescription("Token authentification");
+    public static final Option<String> SUBJECT = Options.key("subject")
+            .stringType()
+            .noDefaultValue()
+            .withDescription("Nats Subject");
 
-    public static final Option<String> USERNAME =
-            Options.key("username")
-                    .stringType()
-                    .noDefaultValue()
-                    .withDescription("Plaintext authentication username");
-    public static final Option<String> PASSWORD =
-            Options.key("password")
-                    .stringType()
-                    .noDefaultValue()
-                    .withDescription("Plaintext authentication password");
-    public static final Option<String> TOKEN =
-            Options.key("token")
-                    .stringType()
-                    .noDefaultValue()
-                    .withDescription("Token authentification");
-    public static final Option<String> CREDS =
-            Options.key("creds")
-                    .stringType()
-                    .noDefaultValue()
-                    .withDescription("Credentials files authentification");
+    public static final Option<NatsJetStreamMessageFormat> FORMAT = Options.key("format")
+            .enumType(NatsJetStreamMessageFormat.class)
+            .defaultValue(NatsJetStreamMessageFormat.JSON)
+            .withDescription(
+                    "Data format. The default format is json. Optional text format. The default field separator is \", \". "
+                            + "If you customize the delimiter, add the \"field_delimiter\" option.");
 }
