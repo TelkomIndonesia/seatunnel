@@ -32,30 +32,28 @@ import io.nats.client.JetStreamApiException;
 import io.nats.client.Nats;
 import io.nats.client.Options;
 import io.nats.client.PublishOptions;
-import io.nats.client.Options.Builder;
+import io.nats.client.impl.Headers;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Optional;
 
 public class NatsJetStreamSinkWriter
         implements SinkWriter<SeaTunnelRow, NatsJetStreamSinkCommitInfo, NatsJetStreamSinkState> {
 
-    private final SinkWriter.Context context;
-    private SeaTunnelRowType seaTunnelRowType;
-
     private final Connection connection;
     private final JetStream jetStream;
-
     private final String defaultSubject;
-    protected final SerializationSchema serializationSchema;
+
+    private final SeaTunnelRowType rowType;
+    private final SerializationSchema serializationSchema;
+    private final Map<String, String> nativeFields;
 
     public NatsJetStreamSinkWriter(Context context, SeaTunnelRowType seaTunnelRowType, ReadonlyConfig pluginConfig)
             throws IOException {
-        this.context = context;
-        this.seaTunnelRowType = seaTunnelRowType;
 
         String url = pluginConfig.get(NatsJetStreamBaseOptions.URL);
-        Builder builder = Options.builder().server(url);
+        Options.Builder builder = Options.builder().server(url);
         String username = pluginConfig.get(NatsJetStreamBaseOptions.USERNAME);
         String password = pluginConfig.get(NatsJetStreamBaseOptions.PASSWORD);
         if (username != null && password != null) {
@@ -71,12 +69,18 @@ public class NatsJetStreamSinkWriter
         } catch (InterruptedException e) {
             throw new IOException("connect nats error", e);
         }
-
         defaultSubject = pluginConfig.get(NatsJetStreamBaseOptions.SUBJECT);
+
         NatsJetStreamMessageFormat format = pluginConfig.get(NatsJetStreamBaseOptions.FORMAT);
+        rowType = seaTunnelRowType;
         switch (format) {
-            default:
+            case JSON:
                 serializationSchema = new JsonSerializationSchema(seaTunnelRowType);
+                nativeFields = null;
+                break;
+            default:
+                serializationSchema = null;
+                nativeFields = pluginConfig.get(NatsJetStreamBaseOptions.NATIVE_FIELDS);
                 break;
         }
     }
@@ -101,9 +105,37 @@ public class NatsJetStreamSinkWriter
 
     @Override
     public void write(SeaTunnelRow arg0) throws IOException {
-        PublishOptions opts = PublishOptions.builder().build();
+        PublishOptions.Builder opts = PublishOptions.builder();
+
+        String subject = defaultSubject;
+        Headers headers = new Headers();
+        byte[] data;
+        if (nativeFields != null) {
+            Object sobj = arg0.getField(rowType.indexOf("subject"));
+            if (sobj != null) {
+                subject = (String) sobj;
+            }
+
+            Object iobj = arg0.getField(rowType.indexOf("id"));
+            if (iobj != null) {
+                opts.messageId((String) iobj);
+            }
+
+            Object hobj = arg0.getField(rowType.indexOf("headers"));
+            if (hobj != null) {
+                ((Map<String, String>) hobj).forEach((t, u) -> {
+                    headers.add(t, u);
+                });
+            }
+
+            data = (byte[]) arg0.getField(rowType.indexOf("data"));
+
+        } else {
+            data = serializationSchema.serialize(arg0);
+        }
+
         try {
-            jetStream.publish(defaultSubject, null, serializationSchema.serialize(arg0), opts);
+            jetStream.publish(subject, headers, data, opts.build());
         } catch (JetStreamApiException e) {
             throw new IOException("publish nats error", e);
         }

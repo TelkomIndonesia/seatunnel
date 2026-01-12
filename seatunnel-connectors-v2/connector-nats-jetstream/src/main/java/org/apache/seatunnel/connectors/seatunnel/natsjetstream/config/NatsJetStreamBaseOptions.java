@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.natsjetstream.config;
 
+import java.util.Map;
+
 import org.apache.seatunnel.api.configuration.Option;
 import org.apache.seatunnel.api.configuration.Options;
 import org.apache.seatunnel.api.options.ConnectorCommonOptions;
@@ -54,4 +56,13 @@ public class NatsJetStreamBaseOptions extends ConnectorCommonOptions {
             .withDescription(
                     "Data format. The default format is json. Optional text format. The default field separator is \", \". "
                             + "If you customize the delimiter, add the \"field_delimiter\" option.");
+
+    public static final Option<Map<String, String>> NATIVE_FIELDS = Options.key("native_format_fields")
+            .mapType()
+            .defaultValue(Map.of(
+                    "id", "id",
+                    "subject", "subject",
+                    "headers", "headers",
+                    "data", "data"))
+            .withDescription("Nats native format fields mapping");
 }
