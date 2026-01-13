@@ -47,4 +47,11 @@ public interface PostgresOptions {
                     .listType()
                     .noDefaultValue()
                     .withDescription("Schema name of the database to monitor.");
+
+    Option<Boolean> REQUIRE_REPLICA_IDENTITY_FULL =
+            Options.key("require-replica-identity-full")
+                    .booleanType()
+                    .defaultValue(true)
+                    .withDescription(
+                            "Require the logical replication slot to have the replica identity set to full.");
 }

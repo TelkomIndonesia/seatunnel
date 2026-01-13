@@ -66,6 +66,7 @@ public class PostgresIncrementalSourceFactory implements TableSourceFactory {
                         JdbcSourceOptions.CONNECTION_POOL_SIZE,
                         PostgresOptions.DECODING_PLUGIN_NAME,
                         PostgresOptions.SLOT_NAME,
+                        PostgresOptions.REQUIRE_REPLICA_IDENTITY_FULL,
                         JdbcSourceOptions.CHUNK_KEY_EVEN_DISTRIBUTION_FACTOR_LOWER_BOUND,
                         JdbcSourceOptions.CHUNK_KEY_EVEN_DISTRIBUTION_FACTOR_UPPER_BOUND,
                         JdbcSourceOptions.SAMPLE_SHARDING_THRESHOLD,
